@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Колония растений</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; }
+        td { padding: 0; border: 1px solid #ccc; }
+        .matrix-cell {
+            width: 45px;
+            height: 30px;
+            text-align: center;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            background: transparent;
+        }
+        .matrix-cell:focus { background-color: #e0f7fa; }
+        button { margin-top: 15px; padding: 8px 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Колония растений</h2>
+
+    <form method="POST" id="matrixForm">
+        <table id="matrixTable">
+            {% for i in range(rows) %}
+            <tr>
+                {% for j in range(cols) %}
+                <td>
+                    <input type="number"
+                           name="cell_{{ i }}_{{ j }}"
+                           id="cell_{{ i }}_{{ j }}"
+                           value="{{ matrix_list[i][j] }}"
+                           class="matrix-cell">
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <button type="submit">Сохранить значения</button>
+    </form>
+
+    <script>
+        // Каждую секунду запрашиваем у сервера актуальную матрицу
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/matrix');
+                const data = await response.json();
+
+                // Обновляем значения в ячейках (если пользователь не редактирует их прямо сейчас)
+                for (let i = 0; i < data.length; i++) {
+                    for (let j = 0; j < data[i].length; j++) {
+                        const input = document.getElementById(`cell_${i}_${j}`);
+                        // Не трогаем поле, в котором сейчас фокус (чтобы не мешать вводу)
+                        if (document.activeElement !== input) {
+                            input.value = data[i][j];
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Ошибка обновления матрицы:', e);
+            }
+        }, 1000);
+    </script>
+
+</body>
+</html>
